@@ -21,15 +21,28 @@ function formatErrors(data) {
 }
 
 async function apiRequest(url, options = {}) {
-    const response = await fetch(url, {
-        ...options,
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken,
-            ...(options.headers || {})
-        },
-        credentials: "same-origin"
-    });
+    let response;
+
+    try {
+        response = await fetch(url, {
+            ...options,
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+                ...(options.headers || {})
+            },
+            credentials: "same-origin"
+        });
+    } catch (networkError) {
+        throw new Error(
+            "Сервер недоступен. Проверьте подключение к интернету " +
+            "и обновите страницу через минуту."
+        );
+    }
+
+    if (response.status >= 500) {
+        throw new Error("Сервер временно недоступен, попробуйте позже.");
+    }
 
     let data = null;
 
